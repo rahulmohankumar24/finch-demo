@@ -16,11 +16,11 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
-    const { matterId, clientName } = await request.json();
+    const { matterId, clientId, clientName } = await request.json();
 
-    if (!matterId || !clientName) {
+    if (!matterId || !clientId || !clientName) {
       return NextResponse.json(
-        { success: false, error: 'matterId and clientName are required' },
+        { success: false, error: 'matterId, clientId, and clientName are required' },
         { status: 400 }
       );
     }
@@ -28,7 +28,7 @@ export async function POST(request: NextRequest) {
     const manager = await getManager();
 
     try {
-      const matter = manager.createMatter(matterId, clientName);
+      const matter = manager.createMatter(matterId, clientId, clientName);
       console.log(`Created matter ${matterId} with ${Object.keys(matter.tasks).length} default tasks`);
       console.log('Default tasks:', Object.keys(matter.tasks));
 
@@ -40,6 +40,7 @@ export async function POST(request: NextRequest) {
         message: `Matter ${matterId} created for ${clientName}`,
         matter: {
           matterId: matter.matterId,
+          clientId: matter.clientId,
           clientName: matter.clientName,
           createdDate: matter.createdDate.toISOString(),
           taskCount: Object.keys(matter.tasks).length

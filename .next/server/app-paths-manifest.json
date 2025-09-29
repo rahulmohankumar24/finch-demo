@@ -1,0 +1,16 @@
+{
+  "/_not-found": "app/_not-found.js",
+  "/api/clients/[clientId]/matters/route": "app/api/clients/[clientId]/matters/route.js",
+  "/api/matters/[matterId]/dependencies/route": "app/api/matters/[matterId]/dependencies/route.js",
+  "/api/clients/route": "app/api/clients/route.js",
+  "/api/clients/[clientId]/matters/create/route": "app/api/clients/[clientId]/matters/create/route.js",
+  "/api/tasks/add-dependency/route": "app/api/tasks/add-dependency/route.js",
+  "/api/matters/route": "app/api/matters/route.js",
+  "/api/matters/[matterId]/repair/route": "app/api/matters/[matterId]/repair/route.js",
+  "/api/tasks/edit-dependencies/route": "app/api/tasks/edit-dependencies/route.js",
+  "/api/matters/[matterId]/route": "app/api/matters/[matterId]/route.js",
+  "/api/tasks/execute/route": "app/api/tasks/execute/route.js",
+  "/api/tasks/create/route": "app/api/tasks/create/route.js",
+  "/page": "app/page.js",
+  "/api/tasks/insert-after/route": "app/api/tasks/insert-after/route.js"
+}

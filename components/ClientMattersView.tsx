@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { ClientData } from '@/lib/storage';
 import { MatterSummary } from '@/lib/litigation-system';
-import { TaskManager } from './TaskManager';
+import StandaloneTaskManager from './StandaloneTaskManager';
 
 interface ClientMattersViewProps {
   client: ClientData;
@@ -98,10 +98,18 @@ export function ClientMattersView({ client, onBack }: ClientMattersViewProps) {
 
   if (selectedMatter) {
     return (
-      <TaskManager
-        matterId={selectedMatter}
-        onBack={() => setSelectedMatter(null)}
-      />
+      <div className="max-w-4xl mx-auto p-6">
+        <button
+          onClick={() => setSelectedMatter(null)}
+          className="flex items-center text-blue-600 hover:text-blue-800 mb-4"
+        >
+          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+          Back to {client.name}
+        </button>
+        <StandaloneTaskManager matterId={selectedMatter} />
+      </div>
     );
   }
 

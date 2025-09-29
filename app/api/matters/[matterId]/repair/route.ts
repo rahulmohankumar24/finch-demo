@@ -30,11 +30,12 @@ export async function POST(
     }
 
     // Recreate the matter to get all default tasks
+    const clientId = matter.clientId;
     const clientName = matter.clientName;
 
     // Delete and recreate matter in memory
     delete manager['matters'][params.matterId];
-    const newMatter = manager.createMatter(params.matterId, clientName);
+    const newMatter = manager.createMatter(params.matterId, clientId, clientName);
 
     // Save to database
     await saveManager(manager);

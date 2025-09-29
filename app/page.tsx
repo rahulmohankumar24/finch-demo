@@ -115,14 +115,20 @@ export default function Home() {
 
       const data = await response.json();
       if (data.success) {
+        // Show the detailed message
         alert(data.result);
-        await fetchMatterStatus(matterId);
-        await fetchMatters();
+
+        // Only refresh if task was actually executed
+        if (data.executed) {
+          await fetchMatterStatus(matterId);
+          await fetchMatters();
+        }
       } else {
         alert(data.error);
       }
     } catch (error) {
       console.error('Failed to execute task:', error);
+      alert('Failed to execute task');
     }
   };
 

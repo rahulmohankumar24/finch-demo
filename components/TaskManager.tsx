@@ -345,13 +345,26 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
                       </select>
 
                       {dep.dependencyType === DependencyType.TIME_BASED && (
-                        <input
-                          type="number"
-                          value={dep.timeDelayWeeks || ''}
-                          onChange={(e) => updateDependency(index, 'timeDelayWeeks', parseInt(e.target.value))}
-                          placeholder="Weeks"
-                          className="w-20 p-2 border border-gray-300 rounded"
-                        />
+                        <div className="flex gap-2 items-center">
+                          <select
+                            value={dep.timeDelayWeeks || ''}
+                            onChange={(e) => updateDependency(index, 'timeDelayWeeks', parseInt(e.target.value))}
+                            className="p-2 border border-gray-300 rounded"
+                          >
+                            <option value="">Select time delay...</option>
+                            <option value="1">1 week</option>
+                            <option value="2">2 weeks</option>
+                            <option value="3">3 weeks</option>
+                            <option value="4">4 weeks (1 month)</option>
+                            <option value="6">6 weeks</option>
+                            <option value="8">8 weeks (2 months)</option>
+                            <option value="12">12 weeks (3 months)</option>
+                            <option value="16">16 weeks (4 months)</option>
+                            <option value="24">24 weeks (6 months)</option>
+                            <option value="52">52 weeks (1 year)</option>
+                          </select>
+                          <span className="text-sm text-gray-500">after completion</span>
+                        </div>
                       )}
 
                       <button

@@ -42,6 +42,58 @@ export async function POST(request: NextRequest) {
 
     console.log(`Found task: ${task.name}, completed: ${task.completed}`);
 
+    // Check if task is already completed
+    if (task.completed) {
+      return NextResponse.json({
+        success: true,
+        result: `Task "${task.name}" already completed`,
+        executed: false
+      });
+    }
+
+    // Check dependencies and provide detailed feedback
+    const dependenciesMet = task.checkDependenciesMet(matter.tasks);
+
+    if (!dependenciesMet) {
+      // Find which dependencies are not met
+      const unmetDependencies: string[] = [];
+
+      for (const dep of task.dependencies) {
+        const targetTask = matter.tasks[dep.targetTaskId];
+        if (!targetTask) {
+          unmetDependencies.push(`Task "${dep.targetTaskId}" not found`);
+          continue;
+        }
+
+        if (dep.dependencyType === 'task_completion') {
+          if (!targetTask.completed) {
+            unmetDependencies.push(`"${targetTask.name}" not completed`);
+          }
+        } else if (dep.dependencyType === 'time_based') {
+          if (!targetTask.completed) {
+            unmetDependencies.push(`"${targetTask.name}" not completed`);
+          } else if (targetTask.completionDate) {
+            const requiredDate = new Date(targetTask.completionDate);
+            requiredDate.setDate(requiredDate.getDate() + (dep.timeDelayWeeks || 0) * 7);
+
+            if (new Date() < requiredDate) {
+              const timeUnit = dep.timeDelayWeeks === 1 ? 'week' : 'weeks';
+              unmetDependencies.push(`${dep.timeDelayWeeks} ${timeUnit} waiting period after "${targetTask.name}" not complete`);
+            }
+          }
+        }
+      }
+
+      const dependencyText = unmetDependencies.join(', ');
+      return NextResponse.json({
+        success: true,
+        result: `Task "${task.name}" not ready (${dependencyText})`,
+        executed: false,
+        unmetDependencies
+      });
+    }
+
+    // Execute the task
     const result = manager.triggerTask(matterId, taskId);
     console.log(`Task execution result: ${result}`);
 
@@ -50,8 +102,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      result,
-      executed: result.includes('complete')
+      result: `Task "${task.name}" complete`,
+      executed: true
     });
   } catch (error) {
     console.error('Error in task execution:', error);

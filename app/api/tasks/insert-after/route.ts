@@ -44,7 +44,19 @@ export async function POST(request: NextRequest) {
 
     console.log(`Found ${dependentTasks.length} tasks that depend on ${insertAfterTaskId}`);
 
-    // Step 2: Create the new task with dependency on insertAfterTaskId
+    // Step 2: Update dependent tasks to point to the new task instead (before creating new task)
+    let updatedTasksCount = 0;
+    for (const { taskId, dependencyIndex } of dependentTasks) {
+      const task = matter.getTask(taskId);
+      if (task && task.dependencies[dependencyIndex]) {
+        // Replace the dependency target
+        task.dependencies[dependencyIndex].targetTaskId = newTaskId;
+        updatedTasksCount++;
+        console.log(`Updated ${taskId} to depend on ${newTaskId} instead of ${insertAfterTaskId}`);
+      }
+    }
+
+    // Step 3: Create the new task with dependency on insertAfterTaskId
     const newTaskDependencies: Dependency[] = [{
       dependencyType: DependencyType.TASK_COMPLETION,
       targetTaskId: insertAfterTaskId
@@ -56,18 +68,6 @@ export async function POST(request: NextRequest) {
         { success: false, error: result },
         { status: 400 }
       );
-    }
-
-    // Step 3: Update dependent tasks to point to the new task instead
-    let updatedTasksCount = 0;
-    for (const { taskId, dependencyIndex } of dependentTasks) {
-      const task = matter.getTask(taskId);
-      if (task && task.dependencies[dependencyIndex]) {
-        // Replace the dependency target
-        task.dependencies[dependencyIndex].targetTaskId = newTaskId;
-        updatedTasksCount++;
-        console.log(`Updated ${taskId} to depend on ${newTaskId} instead of ${insertAfterTaskId}`);
-      }
     }
 
     // Step 4: Save all changes

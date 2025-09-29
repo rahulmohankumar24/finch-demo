@@ -37,12 +37,23 @@ interface TaskManagerProps {
 export default function TaskManager({ matterId, tasks, dependencies = {}, onTaskExecute, onRefresh }: TaskManagerProps) {
   const [showAddTask, setShowAddTask] = useState(false);
   const [newTaskName, setNewTaskName] = useState('');
-  const [newTaskId, setNewTaskId] = useState('');
   const [selectedDependencies, setSelectedDependencies] = useState<Dependency[]>([]);
   const [insertAfterTask, setInsertAfterTask] = useState('');
   const [insertMode, setInsertMode] = useState<'custom' | 'insert'>('custom');
 
   const taskEntries = Object.entries(tasks);
+
+  const generateTaskId = (name: string): string => {
+    // Convert name to snake_case and add random suffix for uniqueness
+    const baseId = name
+      .toLowerCase()
+      .replace(/[^a-z0-9\s]/g, '')
+      .trim()
+      .replace(/\s+/g, '_');
+
+    const randomSuffix = Math.random().toString(36).substring(2, 8);
+    return `${baseId}_${randomSuffix}`;
+  };
 
   const addDependency = () => {
     setSelectedDependencies([...selectedDependencies, {
@@ -63,10 +74,12 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
   };
 
   const createTask = async () => {
-    if (!newTaskName || !newTaskId) {
-      alert('Please fill in task name and ID');
+    if (!newTaskName) {
+      alert('Please fill in task name');
       return;
     }
+
+    const generatedTaskId = generateTaskId(newTaskName);
 
     try {
       const response = await fetch('/api/tasks/create', {
@@ -74,7 +87,7 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           matterId,
-          taskId: newTaskId,
+          taskId: generatedTaskId,
           name: newTaskName,
           dependencies: selectedDependencies.filter(dep => dep.targetTaskId)
         })
@@ -85,7 +98,6 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
         alert(data.message);
         setShowAddTask(false);
         setNewTaskName('');
-        setNewTaskId('');
         setSelectedDependencies([]);
         setInsertAfterTask('');
         setInsertMode('custom');
@@ -100,10 +112,12 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
   };
 
   const insertTaskAfter = async () => {
-    if (!newTaskName || !newTaskId || !insertAfterTask) {
-      alert('Please fill in task name, ID, and select where to insert');
+    if (!newTaskName || !insertAfterTask) {
+      alert('Please fill in task name and select where to insert');
       return;
     }
+
+    const generatedTaskId = generateTaskId(newTaskName);
 
     try {
       const response = await fetch('/api/tasks/insert-after', {
@@ -111,7 +125,7 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           matterId,
-          newTaskId,
+          newTaskId: generatedTaskId,
           newTaskName,
           insertAfterTaskId: insertAfterTask
         })
@@ -125,7 +139,6 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
         }
         setShowAddTask(false);
         setNewTaskName('');
-        setNewTaskId('');
         setSelectedDependencies([]);
         setInsertAfterTask('');
         setInsertMode('custom');
@@ -250,17 +263,9 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
                   placeholder="e.g., Review Medical Records"
                   className="w-full p-2 border border-gray-300 rounded"
                 />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Task ID</label>
-                <input
-                  type="text"
-                  value={newTaskId}
-                  onChange={(e) => setNewTaskId(e.target.value)}
-                  placeholder="e.g., review_medical_records"
-                  className="w-full p-2 border border-gray-300 rounded"
-                />
+                <p className="text-sm text-gray-500 mt-1">
+                  Task ID will be automatically generated based on the name
+                </p>
               </div>
             </div>
 
@@ -394,6 +399,7 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
               <button
                 onClick={() => {
                   setShowAddTask(false);
+                  setNewTaskName('');
                   setInsertMode('custom');
                   setInsertAfterTask('');
                   setSelectedDependencies([]);

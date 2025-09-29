@@ -52,3 +52,6 @@ GROUP BY client_name;
 UPDATE matters
 SET client_id = LOWER(REPLACE(REPLACE(client_name, ' ', '_'), '''', ''))
 WHERE client_name IS NOT NULL;
+
+-- Make client_name nullable since we now have client_id relationship
+ALTER TABLE matters ALTER COLUMN client_name DROP NOT NULL;

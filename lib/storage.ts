@@ -62,6 +62,7 @@ class SupabaseStorage {
         .insert({
           matter_id: matterData.matterId,
           client_id: matterData.clientId,
+          client_name: matterData.clientName,
           created_date: matterData.createdDate
         });
 

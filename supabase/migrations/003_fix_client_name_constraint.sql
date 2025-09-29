@@ -10,6 +10,15 @@ BEGIN
     END IF;
 END $$;
 
+-- Check if matter_name column exists in matters table, add if not
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM information_schema.columns
+                   WHERE table_name = 'matters' AND column_name = 'matter_name') THEN
+        ALTER TABLE matters ADD COLUMN matter_name VARCHAR(255);
+    END IF;
+END $$;
+
 -- Check if foreign key constraint exists, add if not
 DO $$
 BEGIN

@@ -7,11 +7,11 @@ export async function POST(
 ) {
   try {
     const { clientId } = params;
-    const { matterId, clientName } = await request.json();
+    const { matterId, matterName, clientName } = await request.json();
 
-    if (!matterId || !clientName) {
+    if (!matterId || !matterName || !clientName) {
       return NextResponse.json(
-        { success: false, error: 'matterId and clientName are required' },
+        { success: false, error: 'matterId, matterName, and clientName are required' },
         { status: 400 }
       );
     }
@@ -28,16 +28,17 @@ export async function POST(
     }
 
     // Create matter with client association
-    const matter = manager.createMatter(matterId, clientId, clientName);
+    const matter = manager.createMatter(matterId, clientId, clientName, matterName);
 
     // Save to database
     await saveManager(manager);
 
     return NextResponse.json({
       success: true,
-      message: `Matter "${matterId}" created for client "${clientName}"`,
+      message: `Matter "${matterName}" created for client "${clientName}"`,
       matter: {
         matterId: matter.matterId,
+        matterName: matterName,
         clientId: matter.clientId,
         clientName: matter.clientName,
         createdDate: matter.createdDate.toISOString(),

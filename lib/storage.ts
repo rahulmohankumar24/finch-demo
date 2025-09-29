@@ -22,6 +22,7 @@ export interface ClientData {
 
 interface DBMatter {
   matter_id: string;
+  matter_name: string | null;
   client_id: string;
   client_name: string;
   created_date: string;
@@ -61,6 +62,7 @@ class SupabaseStorage {
         .from('matters')
         .insert({
           matter_id: matterData.matterId,
+          matter_name: matterData.matterName || null,
           client_id: matterData.clientId,
           client_name: matterData.clientName,
           created_date: matterData.createdDate
@@ -215,6 +217,7 @@ class SupabaseStorage {
 
     return {
       matterId: matter.matter_id,
+      matterName: matter.matter_name || undefined,
       clientId: matter.client_id,
       clientName: matter.client_name || matter.client_id, // Fallback for legacy data
       tasks: tasksData,

@@ -20,6 +20,7 @@ export interface TaskData {
 
 export interface MatterData {
   matterId: string;
+  matterName?: string;
   clientId: string;
   clientName: string;
   tasks: Record<string, TaskData>;
@@ -44,6 +45,7 @@ export interface MatterStatus {
 
 export interface MatterSummary {
   matterId: string;
+  matterName?: string;
   clientId: string;
   clientName: string;
   createdDate: string;
@@ -122,13 +124,15 @@ export class Task {
 
 export class Matter {
   matterId: string;
+  matterName?: string;
   clientId: string;
   clientName: string;
   tasks: Record<string, Task>;
   createdDate: Date;
 
-  constructor(matterId: string, clientId: string, clientName: string) {
+  constructor(matterId: string, clientId: string, clientName: string, matterName?: string) {
     this.matterId = matterId;
+    this.matterName = matterName;
     this.clientId = clientId;
     this.clientName = clientName;
     this.tasks = {};
@@ -249,6 +253,7 @@ export class Matter {
 
     return {
       matterId: this.matterId,
+      matterName: this.matterName,
       clientId: this.clientId,
       clientName: this.clientName,
       tasks: tasksData,
@@ -257,7 +262,7 @@ export class Matter {
   }
 
   static fromData(data: MatterData): Matter {
-    const matter = new Matter(data.matterId, data.clientId, data.clientName);
+    const matter = new Matter(data.matterId, data.clientId, data.clientName, data.matterName);
     matter.createdDate = new Date(data.createdDate);
 
     // Clear default tasks and load from data
@@ -277,12 +282,12 @@ export class LitigationTaskManager {
     this.matters = {};
   }
 
-  createMatter(matterId: string, clientId: string, clientName: string): Matter {
+  createMatter(matterId: string, clientId: string, clientName: string, matterName?: string): Matter {
     if (this.matters[matterId]) {
       throw new Error(`Matter with ID '${matterId}' already exists`);
     }
 
-    const matter = new Matter(matterId, clientId, clientName);
+    const matter = new Matter(matterId, clientId, clientName, matterName);
     this.matters[matterId] = matter;
     return matter;
   }
@@ -351,6 +356,7 @@ export class LitigationTaskManager {
   listMatters(): MatterSummary[] {
     return Object.values(this.matters).map(matter => ({
       matterId: matter.matterId,
+      matterName: matter.matterName,
       clientId: matter.clientId,
       clientName: matter.clientName,
       createdDate: matter.createdDate.toISOString(),

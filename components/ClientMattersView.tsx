@@ -36,6 +36,7 @@ export function ClientMattersView({ client, onBack }: ClientMattersViewProps) {
       // Convert matters to MatterSummary format
       const matterSummaries: MatterSummary[] = data.matters.map((matter: any) => ({
         matterId: matter.matter_id,
+        matterName: matter.matter_name,
         clientId: matter.client_id,
         clientName: client.name,
         createdDate: matter.created_date,
@@ -56,7 +57,8 @@ export function ClientMattersView({ client, onBack }: ClientMattersViewProps) {
 
     try {
       setCreating(true);
-      const matterId = newMatterName.toLowerCase().replace(/[^a-z0-9]/g, '_').replace(/_+/g, '_').replace(/^_|_$/g, '');
+      // Generate a unique UUID for the matter
+      const matterId = crypto.randomUUID();
 
       const response = await fetch(`/api/clients/${client.client_id}/matters/create`, {
         method: 'POST',
@@ -65,6 +67,7 @@ export function ClientMattersView({ client, onBack }: ClientMattersViewProps) {
         },
         body: JSON.stringify({
           matterId,
+          matterName: newMatterName.trim(),
           clientName: client.name
         }),
       });
@@ -78,6 +81,7 @@ export function ClientMattersView({ client, onBack }: ClientMattersViewProps) {
       // Add new matter to list
       const newMatter: MatterSummary = {
         matterId: data.matter.matterId,
+        matterName: data.matter.matterName,
         clientId: data.matter.clientId,
         clientName: data.matter.clientName,
         createdDate: data.matter.createdDate,
@@ -232,7 +236,7 @@ export function ClientMattersView({ client, onBack }: ClientMattersViewProps) {
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <h3 className="text-lg font-semibold text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {matter.matterId.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                    {matter.matterName || matter.matterId}
                   </h3>
                   <p className="text-sm text-gray-600 mt-1">
                     Created: {new Date(matter.createdDate).toLocaleDateString()}

@@ -40,6 +40,7 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
   const [newTaskId, setNewTaskId] = useState('');
   const [selectedDependencies, setSelectedDependencies] = useState<Dependency[]>([]);
   const [insertAfterTask, setInsertAfterTask] = useState('');
+  const [insertMode, setInsertMode] = useState<'custom' | 'insert'>('custom');
 
   const taskEntries = Object.entries(tasks);
 
@@ -87,6 +88,7 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
         setNewTaskId('');
         setSelectedDependencies([]);
         setInsertAfterTask('');
+        setInsertMode('custom');
         onRefresh();
       } else {
         alert(data.error);
@@ -126,6 +128,7 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
         setNewTaskId('');
         setSelectedDependencies([]);
         setInsertAfterTask('');
+        setInsertMode('custom');
         onRefresh();
       } else {
         alert(data.error);
@@ -271,8 +274,11 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
                     type="radio"
                     name="insertType"
                     value="custom"
-                    defaultChecked
-                    onChange={() => setInsertAfterTask('')}
+                    checked={insertMode === 'custom'}
+                    onChange={() => {
+                      setInsertMode('custom');
+                      setInsertAfterTask('');
+                    }}
                   />
                   <span>Custom Dependencies (manual setup)</span>
                 </label>
@@ -282,13 +288,17 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
                     type="radio"
                     name="insertType"
                     value="insert"
-                    onChange={() => setSelectedDependencies([])}
+                    checked={insertMode === 'insert'}
+                    onChange={() => {
+                      setInsertMode('insert');
+                      setSelectedDependencies([]);
+                    }}
                   />
                   <span>Insert After Existing Task (automatic dependency chain)</span>
                 </label>
               </div>
 
-              {insertAfterTask !== '' || document.querySelector('input[name="insertType"]:checked')?.value === 'insert' ? (
+              {insertMode === 'insert' ? (
                 <div className="mt-3">
                   <label className="block text-sm font-medium mb-1">Insert After:</label>
                   <select
@@ -382,16 +392,21 @@ export default function TaskManager({ matterId, tasks, dependencies = {}, onTask
             {/* Action Buttons */}
             <div className="flex justify-end gap-3">
               <button
-                onClick={() => setShowAddTask(false)}
+                onClick={() => {
+                  setShowAddTask(false);
+                  setInsertMode('custom');
+                  setInsertAfterTask('');
+                  setSelectedDependencies([]);
+                }}
                 className="px-4 py-2 bg-gray-300 text-gray-700 rounded hover:bg-gray-400"
               >
                 Cancel
               </button>
               <button
-                onClick={insertAfterTask ? insertTaskAfter : createTask}
+                onClick={insertMode === 'insert' ? insertTaskAfter : createTask}
                 className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
               >
-                {insertAfterTask ? 'Insert Task' : 'Create Task'}
+                {insertMode === 'insert' ? 'Insert Task' : 'Create Task'}
               </button>
             </div>
           </div>

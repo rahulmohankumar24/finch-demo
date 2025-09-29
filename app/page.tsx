@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { DependencyType } from '@/lib/litigation-system';
+import TaskManager from '@/components/TaskManager';
 
 interface Matter {
   matterId: string;
@@ -26,9 +27,25 @@ interface MatterStatus {
   tasks: Record<string, TaskStatus>;
 }
 
+interface DetailedMatterStatus {
+  matter: {
+    matterId: string;
+    clientName: string;
+  };
+  dependencies: Record<string, Array<{
+    type: string;
+    targetTask: string;
+    targetTaskName: string;
+    timeDelayWeeks?: number;
+    description: string;
+    isMet: boolean;
+  }>>;
+  tasks: Record<string, TaskStatus>;
+}
+
 export default function Home() {
   const [matters, setMatters] = useState<Matter[]>([]);
-  const [selectedMatter, setSelectedMatter] = useState<MatterStatus | null>(null);
+  const [selectedMatter, setSelectedMatter] = useState<DetailedMatterStatus | null>(null);
   const [newMatterId, setNewMatterId] = useState('');
   const [newClientName, setNewClientName] = useState('');
   const [loading, setLoading] = useState(false);
@@ -51,10 +68,10 @@ export default function Home() {
 
   const fetchMatterStatus = async (matterId: string) => {
     try {
-      const response = await fetch(`/api/matters/${matterId}`);
+      const response = await fetch(`/api/matters/${matterId}/dependencies`);
       const data = await response.json();
       if (data.success) {
-        setSelectedMatter(data.matter);
+        setSelectedMatter(data);
       }
     } catch (error) {
       console.error('Failed to fetch matter status:', error);
@@ -171,62 +188,25 @@ export default function Home() {
         {/* Selected Matter Tasks */}
         <div className="bg-white rounded-lg shadow-md p-6">
           <h2 className="text-xl font-semibold mb-4">
-            {selectedMatter ? `Tasks for ${selectedMatter.matterId}` : 'Select a Matter'}
+            {selectedMatter ? `Tasks for ${selectedMatter.matter.matterId}` : 'Select a Matter'}
           </h2>
 
           {selectedMatter ? (
             <div>
-              <div className="mb-4 p-3 bg-gray-50 rounded">
-                <div className="font-medium">{selectedMatter.clientName}</div>
+              <div className="mb-6 p-3 bg-gray-50 rounded">
+                <div className="font-medium">{selectedMatter.matter.clientName}</div>
                 <div className="text-sm text-gray-600">
-                  Created: {new Date(selectedMatter.createdDate).toLocaleDateString()}
+                  Matter ID: {selectedMatter.matter.matterId}
                 </div>
               </div>
 
-              <div className="space-y-3">
-                {Object.entries(selectedMatter.tasks).map(([taskId, task]) => (
-                  <div
-                    key={taskId}
-                    className={`p-3 border rounded ${
-                      task.completed
-                        ? 'border-green-300 bg-green-50'
-                        : task.canExecute
-                        ? 'border-blue-300 bg-blue-50'
-                        : 'border-gray-300 bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <div className="font-medium flex items-center gap-2">
-                          <span className={task.completed ? 'text-green-600' : 'text-gray-600'}>
-                            {task.completed ? '✓' : '○'}
-                          </span>
-                          {task.name}
-                        </div>
-                        <div className="text-sm text-gray-600">
-                          {task.completed && task.completionDate && (
-                            <span>Completed: {new Date(task.completionDate).toLocaleDateString()}</span>
-                          )}
-                          {!task.completed && (
-                            <span>
-                              Dependencies met: {task.dependenciesMet ? '✓' : '✗'}
-                            </span>
-                          )}
-                        </div>
-                      </div>
-
-                      {task.canExecute && (
-                        <button
-                          onClick={() => executeTask(selectedMatter.matterId, taskId)}
-                          className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
-                        >
-                          Execute
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
+              <TaskManager
+                matterId={selectedMatter.matter.matterId}
+                tasks={selectedMatter.tasks}
+                dependencies={selectedMatter.dependencies}
+                onTaskExecute={(taskId) => executeTask(selectedMatter.matter.matterId, taskId)}
+                onRefresh={() => fetchMatterStatus(selectedMatter.matter.matterId)}
+              />
             </div>
           ) : (
             <p className="text-gray-500">Click on a matter to view its tasks.</p>

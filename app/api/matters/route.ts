@@ -29,7 +29,11 @@ export async function POST(request: NextRequest) {
 
     try {
       const matter = manager.createMatter(matterId, clientName);
+      console.log(`Created matter ${matterId} with ${Object.keys(matter.tasks).length} default tasks`);
+      console.log('Default tasks:', Object.keys(matter.tasks));
+
       await saveManager(manager);
+      console.log('Matter and tasks saved to database');
 
       return NextResponse.json({
         success: true,
@@ -37,10 +41,12 @@ export async function POST(request: NextRequest) {
         matter: {
           matterId: matter.matterId,
           clientName: matter.clientName,
-          createdDate: matter.createdDate.toISOString()
+          createdDate: matter.createdDate.toISOString(),
+          taskCount: Object.keys(matter.tasks).length
         }
       });
     } catch (error) {
+      console.error('Error creating matter:', error);
       return NextResponse.json(
         { success: false, error: error instanceof Error ? error.message : 'Unknown error' },
         { status: 400 }

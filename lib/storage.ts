@@ -220,10 +220,13 @@ export async function getManager(): Promise<LitigationTaskManager> {
     globalManager = new LitigationTaskManager();
     // Load existing data from Supabase
     try {
+      console.log('Loading data from Supabase...');
       const allData = await storage.loadAllMatters();
+      console.log('Loaded matters:', Object.keys(allData));
       globalManager.importData(allData);
     } catch (error) {
       console.error('Failed to load data from Supabase:', error);
+      console.error('Error details:', error instanceof Error ? error.message : error);
       // Continue with empty manager if database is not available
     }
   }

@@ -161,11 +161,15 @@ export class Matter {
       timeDelayWeeks: 2
     });
 
-    // 5. Create demand (depends on collect medical records)
+    // 5. Create demand (depends on collect medical records AND client check in)
     const createDemand = new Task("create_demand", "Create Demand");
     createDemand.addDependency({
       dependencyType: DependencyType.TASK_COMPLETION,
       targetTaskId: "collect_medical_records"
+    });
+    createDemand.addDependency({
+      dependencyType: DependencyType.TASK_COMPLETION,
+      targetTaskId: "client_checkin"
     });
 
     // Add all tasks to the matter

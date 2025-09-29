@@ -92,21 +92,47 @@ curl -X POST http://localhost:3000/api/tasks/create \
 
 ## Data Persistence
 
-Currently uses in-memory storage for demo purposes. For production, integrate with a database:
+Uses Supabase for persistent data storage. All matters and tasks are stored in PostgreSQL tables with proper relationships and constraints.
 
-- PostgreSQL
-- MongoDB
-- Supabase
-- PlanetScale
+## Setup Instructions
 
-Update the `lib/storage.ts` file to connect to your database of choice.
+### 1. Create Supabase Project
 
-## Environment Variables
+1. Go to [supabase.com](https://supabase.com) and create a new project
+2. Wait for the database to be provisioned
 
-For production deployment, you may want to add:
+### 2. Configure Environment Variables
+
+Copy `.env.example` to `.env.local` and fill in your Supabase credentials:
 
 ```env
-DATABASE_URL=your_database_connection_string
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
+```
+
+Find these values in your Supabase dashboard under Settings > API.
+
+### 3. Set Up Database Schema
+
+Run the database migration to create the required tables:
+
+```bash
+npm run setup-db
+```
+
+This creates:
+- `matters` table for legal matters
+- `tasks` table for individual tasks
+- `task_dependencies` table for task relationships
+- Proper indexes and constraints
+- Row Level Security policies
+
+### 4. Install Dependencies and Run
+
+```bash
+npm install
+npm run dev
 ```
 
 ## License

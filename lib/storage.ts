@@ -34,6 +34,9 @@ interface DBDependency {
 
 class SupabaseStorage {
   async saveMatter(matterData: MatterData): Promise<void> {
+    console.log(`Saving matter ${matterData.matterId} with ${Object.keys(matterData.tasks).length} tasks`);
+    console.log('Tasks to save:', Object.keys(matterData.tasks));
+
     const { data: existingMatter } = await supabase
       .from('matters')
       .select('matter_id')
@@ -53,12 +56,23 @@ class SupabaseStorage {
       if (matterError) {
         throw new Error(`Failed to save matter: ${matterError.message}`);
       }
+      console.log(`Matter ${matterData.matterId} saved to database`);
+    } else {
+      console.log(`Matter ${matterData.matterId} already exists in database`);
     }
 
     // Save all tasks
     for (const [taskId, taskData] of Object.entries(matterData.tasks)) {
-      await this.saveTask(matterData.matterId, taskData);
+      console.log(`Saving task: ${taskId} (${taskData.name})`);
+      try {
+        await this.saveTask(matterData.matterId, taskData);
+        console.log(`Task ${taskId} saved successfully`);
+      } catch (error) {
+        console.error(`Failed to save task ${taskId}:`, error);
+        throw error;
+      }
     }
+    console.log(`All tasks saved for matter ${matterData.matterId}`);
   }
 
   async saveTask(matterId: string, taskData: TaskData): Promise<void> {

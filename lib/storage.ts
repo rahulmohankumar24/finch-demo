@@ -76,7 +76,7 @@ class SupabaseStorage {
   }
 
   async saveTask(matterId: string, taskData: TaskData): Promise<void> {
-    // Upsert task
+    // Upsert task with proper conflict resolution
     const { error: taskError } = await supabase
       .from('tasks')
       .upsert({
@@ -86,6 +86,9 @@ class SupabaseStorage {
         completed: taskData.completed,
         completion_date: taskData.completionDate,
         created_date: taskData.createdDate
+      }, {
+        onConflict: 'matter_id,task_id',
+        ignoreDuplicates: false
       });
 
     if (taskError) {

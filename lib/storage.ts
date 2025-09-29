@@ -9,8 +9,20 @@ import {
 } from './litigation-system';
 import { supabase } from './supabase';
 
+export interface ClientData {
+  id: string;
+  client_id: string;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  address: string | null;
+  created_date: string;
+  updated_date: string;
+}
+
 interface DBMatter {
   matter_id: string;
+  client_id: string;
   client_name: string;
   created_date: string;
 }
@@ -49,7 +61,7 @@ class SupabaseStorage {
         .from('matters')
         .insert({
           matter_id: matterData.matterId,
-          client_name: matterData.clientName,
+          client_id: matterData.clientId,
           created_date: matterData.createdDate
         });
 
@@ -202,7 +214,8 @@ class SupabaseStorage {
 
     return {
       matterId: matter.matter_id,
-      clientName: matter.client_name,
+      clientId: matter.client_id,
+      clientName: matter.client_name || matter.client_id, // Fallback for legacy data
       tasks: tasksData,
       createdDate: matter.created_date
     };
@@ -248,6 +261,55 @@ class SupabaseStorage {
       .single();
 
     return !error && !!data;
+  }
+
+  async getClient(clientId: string): Promise<ClientData | null> {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .eq('client_id', clientId)
+      .single();
+
+    if (error || !data) {
+      return null;
+    }
+
+    return data;
+  }
+
+  async getAllClients(): Promise<ClientData[]> {
+    const { data, error } = await supabase
+      .from('clients')
+      .select('*')
+      .order('name');
+
+    if (error) {
+      throw new Error(`Failed to fetch clients: ${error.message}`);
+    }
+
+    return data || [];
+  }
+
+  async getMattersForClient(clientId: string): Promise<Record<string, MatterData>> {
+    const { data: matters, error } = await supabase
+      .from('matters')
+      .select('matter_id')
+      .eq('client_id', clientId);
+
+    if (error) {
+      throw new Error(`Failed to load matters for client: ${error.message}`);
+    }
+
+    const clientMatters: Record<string, MatterData> = {};
+
+    for (const matter of matters || []) {
+      const matterData = await this.loadMatter(matter.matter_id);
+      if (matterData) {
+        clientMatters[matter.matter_id] = matterData;
+      }
+    }
+
+    return clientMatters;
   }
 }
 

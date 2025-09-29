@@ -61,22 +61,36 @@ class SupabaseStorage {
       console.log(`Matter ${matterData.matterId} already exists in database`);
     }
 
-    // Save all tasks
+    // Save all tasks first (without dependencies)
     for (const [taskId, taskData] of Object.entries(matterData.tasks)) {
       console.log(`Saving task: ${taskId} (${taskData.name})`);
       try {
-        await this.saveTask(matterData.matterId, taskData);
+        await this.saveTaskWithoutDependencies(matterData.matterId, taskData);
         console.log(`Task ${taskId} saved successfully`);
       } catch (error) {
         console.error(`Failed to save task ${taskId}:`, error);
         throw error;
       }
     }
-    console.log(`All tasks saved for matter ${matterData.matterId}`);
+
+    // Now save all dependencies (after all tasks exist)
+    for (const [taskId, taskData] of Object.entries(matterData.tasks)) {
+      if (taskData.dependencies.length > 0) {
+        console.log(`Saving dependencies for task: ${taskId}`);
+        try {
+          await this.saveDependencies(matterData.matterId, taskData);
+          console.log(`Dependencies for ${taskId} saved successfully`);
+        } catch (error) {
+          console.error(`Failed to save dependencies for ${taskId}:`, error);
+          throw error;
+        }
+      }
+    }
+    console.log(`All tasks and dependencies saved for matter ${matterData.matterId}`);
   }
 
-  async saveTask(matterId: string, taskData: TaskData): Promise<void> {
-    // Upsert task with proper conflict resolution
+  async saveTaskWithoutDependencies(matterId: string, taskData: TaskData): Promise<void> {
+    // Upsert task with proper conflict resolution (without dependencies)
     const { error: taskError } = await supabase
       .from('tasks')
       .upsert({
@@ -94,7 +108,9 @@ class SupabaseStorage {
     if (taskError) {
       throw new Error(`Failed to save task: ${taskError.message}`);
     }
+  }
 
+  async saveDependencies(matterId: string, taskData: TaskData): Promise<void> {
     // Delete existing dependencies
     await supabase
       .from('task_dependencies')
@@ -120,6 +136,14 @@ class SupabaseStorage {
         throw new Error(`Failed to save dependencies: ${depError.message}`);
       }
     }
+  }
+
+  async saveTask(matterId: string, taskData: TaskData): Promise<void> {
+    // Save task first
+    await this.saveTaskWithoutDependencies(matterId, taskData);
+
+    // Then save dependencies
+    await this.saveDependencies(matterId, taskData);
   }
 
   async loadMatter(matterId: string): Promise<MatterData | null> {
